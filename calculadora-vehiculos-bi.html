@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora</title>
+    <!-- Use jQuery from CDN -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <!-- Use Bootstrap from CDN -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+        integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+</head>
+
+<body>
+    <div class="container">
+        <div class="jumbotron jumbotron-fluid">
+            <div class="container">
+                <h1 class="display-4">Calculadora Veículos BI</h1>
+            </div>
+        </div>
+
+        <!-- Capital -->
+        <div class="row">
+            <div class="col-12">
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Capital</span>
+                    </div>
+                    <input type="number" class="form-control" value="135000" id="valor_con_iva">
+                </div>
+            </div>
+        </div>
+
+        <!-- Plazo -->
+        <div class="row">
+            <div class="col-12">
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Plazo</span>
+                    </div>
+                    <input type="number" class="form-control" value="36" id="plazo">
+                </div>
+            </div>
+        </div>
+
+        <!-- Enganche -->
+        <div class="row">
+            <div class="col-12">
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Enganche</span>
+                    </div>
+                    <input type="number" class="form-control" value="35000" id="enganche">
+                </div>
+            </div>
+        </div>
+
+        <!-- Boton Calcular -->
+        <div class="row">
+            <div class="col-12">
+                <button id="calcular" class="btn btn-primary">Calcular</button>
+            </div>
+        </div>
+
+        <br>
+        <br>
+
+        <table class="table table-bordered">
+            <tr class="table-primary">
+                <th colspan="2" class="text-center">Información del Financiamiento</th>
+            </tr>
+            <tr>
+                <td>Gastos de Escrituración</td>
+                <td><span id="gastos_escrituracion"></span></td>
+            </tr>
+            <tr>
+                <th>Monto a financiar (Q.)</th>
+                <th><span id="monto_financiar"></span></th>
+            </tr>
+            <tr class="table-primary">
+                <th colspan="2" class="text-center">Información de las Cuotas</th>
+            </tr>
+            <tr>
+                <td>Gastos administrativos</td>
+                <td><span id="gastos_administracion"></span></td>
+            </tr>
+            <tr>
+                <td>Cuota mensual</td>
+                <td><span id="cuota_mensual"></span></td>
+            </tr>
+            <tr>
+                <th>Pago mensual</th>
+                <th><span id="pago_mensual"></span></th>
+            </tr>
+            <tr class="table-primary">
+                <th colspan="2" class="text-center">Información Adicional</th>
+            </tr>
+            <tr>
+                <td>Cuota x Plazo</td>
+                <td><span id="cuota_plazo"></span></td>
+            </tr>
+            <tr>
+                <td>Pago Total</td>
+                <td><span id="pago_total"></span></td>
+            </tr>
+            <tr>
+                <th>Costo Adicional</th>
+                <th><span id="costo_adicional"></span></th>
+            </tr>
+        </table>
+    </div>
+    <script>
+        const numberFormat = new Intl.NumberFormat('es-GT', {
+            style: 'currency',
+            currency: 'GTQ',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        });
+
+        function redondear(j, i) {
+            return +(Math.round(j * 100) / 100).toFixed(2);
+        }
+        function cuota(tasa, plazo, monto) {
+            return -((monto * tasa) / (1 - Math.pow(1 + tasa, -plazo)))
+        }
+        function formato_moneda(monto) {
+            return numberFormat.format(monto);
+        }
+
+        function calcular_financiamiento() {
+            const valor_con_iva = parseFloat($("#valor_con_iva").val());
+            const enganche = parseFloat($("#enganche").val());
+            const plazo = parseFloat($("#plazo").val());
+
+            const interes_anual = 8.6 / 100;
+            const interes_mensual = interes_anual / 12;
+
+            const valor_sin_iva = redondear(valor_con_iva / 1.12);
+            const valor_subtotal = valor_con_iva - enganche;
+            const gastos_escrituracion = redondear((valor_subtotal * (1.15 / 100)) + 500) + 500;
+            const monto_financiar = redondear(valor_subtotal + gastos_escrituracion);
+            const cuota_mensual = redondear(cuota(interes_mensual, plazo, -monto_financiar));
+            const gastos_administracion = redondear((valor_sin_iva * 0.05 / 100) / 12);
+            const pago_mensual = redondear(cuota_mensual + gastos_administracion);
+            const cuota_plazo = redondear(pago_mensual * plazo);
+            const pago_total = redondear(cuota_plazo + enganche);
+            const costo_adicional = redondear(pago_total - valor_subtotal);
+
+            $("#gastos_escrituracion").html(formato_moneda(gastos_escrituracion));
+            $("#monto_financiar").html(formato_moneda(monto_financiar));
+            $("#gastos_administracion").html(formato_moneda(gastos_administracion));
+            $("#cuota_mensual").html(formato_moneda(cuota_mensual));
+            $("#pago_mensual").html(formato_moneda(pago_mensual));
+            $("#cuota_plazo").html(formato_moneda(cuota_plazo));
+            $("#pago_total").html(formato_moneda(pago_total));
+            $("#costo_adicional").html(formato_moneda(costo_adicional));
+        }
+
+        $("#calcular").click(calcular_financiamiento);
+    </script>
+</body>
+
+</html>

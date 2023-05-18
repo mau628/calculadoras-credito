@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculador UPA - Presta Ayuda</title>
+    <!-- Use jQuery from CDN -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <!-- Use Bootstrap from CDN -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+        integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+</head>
+
+<body>
+    <div class="container">
+        <div class="jumbotron jumbotron-fluid">
+            <div class="container">
+                <h1 class="display-4">Calculadora UPA - Presta Ayuda</h1>
+            </div>
+        </div>
+
+        <!-- Capital -->
+        <div class="row">
+            <div class="col-12">
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Capital</span>
+                    </div>
+                    <input type="number" class="form-control" value="100000" id="capital">
+                </div>
+            </div>
+        </div>
+
+        <!-- Plazo en Meses -->
+        <div class="row">
+            <div class="col-12">
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Plazo</span>
+                    </div>
+                    <input type="number" class="form-control" value="36" id="plazo">
+                </div>
+            </div>
+        </div>
+
+        <!-- Enganche -->
+        <div class="row">
+            <div class="col-12">
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Enganche</span>
+                    </div>
+                    <input type="number" class="form-control" value="35000" id="enganche">
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- Interes Sobre Saldo -->
+        <div class="row">
+            <div class="col-12">
+                <form class="form-inline">
+                    <div class="input-group mb-2 mr-sm-2">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">Interés sobre saldo</span>
+                        </div>
+                        <input type="number" class="form-control" value="12" id="interes" disabled>
+                    </div>
+                    <div class="input-group mb-2 mr-sm-2">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">Aportación</span>
+                        </div>
+                        <input type="number" class="form-control" value="10" id="aportacion">
+                    </div>
+                </form>
+            </div>
+        </div>
+
+
+        <!-- Boton Calcular -->
+        <div class="row">
+            <div class="col-12">
+                <button id="calcular" class="btn btn-primary">Calcular</button>
+            </div>
+        </div>
+
+        <br />
+        <br />
+
+
+        <!-- Resultado -->
+        <div class="row">
+            <div class="col-4">
+                <h6>Tasa efectiva <span class="badge badge-secondary" id="tasaEfectiva"></span></h6>
+            </div>
+            <div class="col-4">
+                <h6>Intereses Totales <span class="badge badge-secondary" id="interesesTotales"></span></h6>
+            </div>
+            <div class="col-4">
+                <h6>Cuota Promedio <span class="badge badge-secondary" id="cuotaPromedio"></span></h6>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-4">
+                <h6>Descuentos <span class="badge badge-secondary" id="descuentos"></span></h6>
+            </div>
+            <div class="col-4">
+                <h6>Costo Adicional <span class="badge badge-secondary" id="costoAdicional"></span></h6>
+            </div>
+        </div>
+
+        <!-- HTML table -->
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Cuota</th>
+                    <th>Saldo Capital</th>
+                    <th>Capital</th>
+                    <th>Interes</th>
+                    <th>Aportacion</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tfoot id="totales"></tfoot>
+            <tbody id="tablaCuotas">
+            </tbody>
+        </table>
+
+    </div>
+
+    <script>
+        const diasAnio = function () {
+            const d = new Date();
+            const n = d.getFullYear();
+            const anio = parseInt(n);
+            let dias = 365;
+            if (((anio % 4 == 0) && (anio % 100 != 0)) || (anio % 400 == 0)) {
+                dias = 366;
+            }
+            return dias;
+        }();
+
+        const numberFormat = new Intl.NumberFormat('es-GT', {
+            style: 'currency',
+            currency: 'GTQ',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        });
+
+        function redondear(valor) {
+            return +(Math.round(valor * 100) / 100).toFixed(2);
+        }
+
+        function formatoMoneda(monto) {
+            return numberFormat.format(monto);
+        }
+
+        function sum(items, prop) {
+            return items.reduce(function (a, b) {
+                return a + b[prop];
+            }, 0);
+        }
+
+        function calcular() {
+            const capitalInicial = parseFloat($('#capital').val());
+            const plazo = parseFloat($('#plazo').val());
+            const interes = parseFloat($('#interes').val()) / 100;
+            const aportacion = parseFloat($('#aportacion').val());
+            const enganche = parseFloat($('#enganche').val());
+            const gastosAdminisrativos = {
+                1: 0.01,    // 12 meses
+                2: 0.0125,  // 24 meses
+                3: 0.015,   // 36 meses
+                4: 0.0175,  // 48 meses
+                5: 0.02     // 60 meses
+            };
+            const multiploPlazo = Math.abs(plazo / 12);
+            const descuentos = (capitalInicial * 0.01) + 100 + (capitalInicial * gastosAdminisrativos[multiploPlazo]);
+
+            let interesTotal = 0;
+            let capital = capitalInicial;
+            const cuotas = new Array();
+            const capitalMensual = redondear(capital / plazo, 2);
+
+            for (i = 0; i < plazo; i++) {
+                const interesCuota = redondear((capital * interes * 31) / diasAnio, 2);
+                interesTotal += interesCuota;
+
+                cuotas.push({
+                    cuota: i + 1,
+                    capital: capital,
+                    capitalMensual: capitalMensual,
+                    interesCuota: interesCuota,
+                    aportacion: aportacion,
+                    totalCuota: redondear(capitalMensual + interesCuota + aportacion, 2)
+                });
+
+                capital = redondear(capital - capitalMensual, 2);
+            }
+            const tasaEfectiva = redondear(((interesTotal / capitalInicial) / (plazo / 12)) * 100, 2);
+            const valorTotal = sum(cuotas, "totalCuota") - capitalInicial + enganche + descuentos;
+
+            $('#tablaCuotas').empty();
+            $('#totales').empty();
+
+            cuotas.forEach(cuota => {
+                $('#tablaCuotas')
+                    .append(
+                        `<tr>
+                    <td>${cuota.cuota}</td>
+                    <td>${formatoMoneda(cuota.capital)}</td>
+                    <td>${formatoMoneda(cuota.capitalMensual)}</td>
+                    <td>${formatoMoneda(cuota.interesCuota)}</td>
+                    <td>${formatoMoneda(cuota.aportacion)}</td>
+                    <td>${formatoMoneda(cuota.totalCuota)}</td>
+                </tr>`);
+            });
+            $('#totales')
+                .append(
+                    `<tr class="table-warning">
+                    <th>${plazo}</th>
+                    <th>${formatoMoneda(capitalInicial)}</th>
+                    <th>${formatoMoneda(sum(cuotas, "capitalMensual"))}</th>
+                    <th>${formatoMoneda(sum(cuotas, "interesCuota"))}</th>
+                    <th>${formatoMoneda(sum(cuotas, "aportacion"))}</th>
+                    <th>${formatoMoneda(sum(cuotas, "totalCuota"))}</th>
+                </tr>`);
+
+            $('#tasaEfectiva').text(tasaEfectiva);
+            $('#interesesTotales').text(formatoMoneda(interesTotal));
+            $('#cuotaPromedio').text(formatoMoneda((interesTotal + capitalInicial) / plazo));
+            $('#costoAdicional').text(formatoMoneda(valorTotal));
+            $('#descuentos').text(formatoMoneda(-descuentos));
+        }
+
+        $(document).ready(function () {
+            $('#calcular').on('click', calcular);
+        });
+    </script>
+
+</body>
+
+</html>
