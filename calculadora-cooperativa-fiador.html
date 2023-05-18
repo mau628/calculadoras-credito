@@ -11,6 +11,7 @@
     <!-- Use Bootstrap from CDN -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
         integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+    <script src="funciones.js"></script>
 </head>
 
 <body>
@@ -132,38 +133,6 @@
     </div>
 
     <script>
-        const diasAnio = function () {
-            const d = new Date();
-            const n = d.getFullYear();
-            const anio = parseInt(n);
-            let dias = 365;
-            if (((anio % 4 == 0) && (anio % 100 != 0)) || (anio % 400 == 0)) {
-                dias = 366;
-            }
-            return dias;
-        }();
-
-        const numberFormat = new Intl.NumberFormat('es-GT', {
-            style: 'currency',
-            currency: 'GTQ',
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-        });
-
-        function redondear(valor) {
-            return +(Math.round(valor * 100) / 100).toFixed(2);
-        }
-
-        function formatoMoneda(monto) {
-            return numberFormat.format(monto);
-        }
-
-        function sum(items, prop) {
-            return items.reduce(function (a, b) {
-                return a + b[prop];
-            }, 0);
-        }
-
         function calcular() {
             const capitalInicial = parseFloat($('#capital').val());
             const plazo = parseFloat($('#plazo').val());

@@ -11,6 +11,7 @@
     <!-- Use Bootstrap from CDN -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
         integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+    <script src="funciones.js"></script>
 </head>
 
 <body>
@@ -112,53 +113,36 @@
         </table>
     </div>
     <script>
-        const numberFormat = new Intl.NumberFormat('es-GT', {
-            style: 'currency',
-            currency: 'GTQ',
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-        });
-
-        function redondear(j, i) {
-            return +(Math.round(j * 100) / 100).toFixed(2);
-        }
-        function cuota(tasa, plazo, monto) {
-            return -((monto * tasa) / (1 - Math.pow(1 + tasa, -plazo)))
-        }
-        function formato_moneda(monto) {
-            return numberFormat.format(monto);
-        }
-
-        function calcular_financiamiento() {
-            const valor_con_iva = parseFloat($("#valor_con_iva").val());
+        function calcular() {
+            const capital = parseFloat($("#valor_con_iva").val());
             const enganche = parseFloat($("#enganche").val());
             const plazo = parseFloat($("#plazo").val());
 
-            const interes_anual = 8.6 / 100;
-            const interes_mensual = interes_anual / 12;
+            const interesAnual = 8.6 / 100;
+            const interesMensual = interesAnual / 12;
 
-            const valor_sin_iva = redondear(valor_con_iva / 1.12);
-            const valor_subtotal = valor_con_iva - enganche;
-            const gastos_escrituracion = redondear((valor_subtotal * (1.15 / 100)) + 500) + 500;
-            const monto_financiar = redondear(valor_subtotal + gastos_escrituracion);
-            const cuota_mensual = redondear(cuota(interes_mensual, plazo, -monto_financiar));
-            const gastos_administracion = redondear((valor_sin_iva * 0.05 / 100) / 12);
-            const pago_mensual = redondear(cuota_mensual + gastos_administracion);
-            const cuota_plazo = redondear(pago_mensual * plazo);
-            const pago_total = redondear(cuota_plazo + enganche);
-            const costo_adicional = redondear(pago_total - valor_subtotal);
+            const capitalSinIva = redondear(capital / 1.12);
+            const valorSubtotal = capital - enganche;
+            const gastosEscrituracion = redondear((valorSubtotal * (1.15 / 100)) + 500) + 500;
+            const montoFinanciar = redondear(valorSubtotal + gastosEscrituracion);
+            const cuotaMensual = redondear(cuota(interesMensual, plazo, -montoFinanciar));
+            const gastosAdministrativos = redondear((capitalSinIva * 0.05 / 100) / 12);
+            const pagoMensual = redondear(cuotaMensual + gastosAdministrativos);
+            const cuotaXPlazo = redondear(pagoMensual * plazo);
+            const pagoTotal = redondear(cuotaXPlazo + enganche);
+            const costoAdicional = redondear(pagoTotal - valorSubtotal);
 
-            $("#gastos_escrituracion").html(formato_moneda(gastos_escrituracion));
-            $("#monto_financiar").html(formato_moneda(monto_financiar));
-            $("#gastos_administracion").html(formato_moneda(gastos_administracion));
-            $("#cuota_mensual").html(formato_moneda(cuota_mensual));
-            $("#pago_mensual").html(formato_moneda(pago_mensual));
-            $("#cuota_plazo").html(formato_moneda(cuota_plazo));
-            $("#pago_total").html(formato_moneda(pago_total));
-            $("#costo_adicional").html(formato_moneda(costo_adicional));
+            $("#gastos_escrituracion").html(formatoMoneda(gastosEscrituracion));
+            $("#monto_financiar").html(formatoMoneda(montoFinanciar));
+            $("#gastos_administracion").html(formatoMoneda(gastosAdministrativos));
+            $("#cuota_mensual").html(formatoMoneda(cuotaMensual));
+            $("#pago_mensual").html(formatoMoneda(pagoMensual));
+            $("#cuota_plazo").html(formatoMoneda(cuotaXPlazo));
+            $("#pago_total").html(formatoMoneda(pagoTotal));
+            $("#costo_adicional").html(formatoMoneda(costoAdicional));
         }
 
-        $("#calcular").click(calcular_financiamiento);
+        $("#calcular").click(calcular);
     </script>
 </body>
 
